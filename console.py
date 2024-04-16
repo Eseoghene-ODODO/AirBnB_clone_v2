@@ -2,6 +2,7 @@
 """ Console Module """
 import cmd
 import sys
+from datetime import datetime
 from models.base_model import BaseModel
 from models.__init__ import storage
 from models.user import User
@@ -16,6 +17,7 @@ class HBNBCommand(cmd.Cmd):
     """ Contains the functionality for the HBNB console"""
 
     # determines prompt for interactive/non-interactive modes
+    completekey = 'Tab'
     prompt = '(hbnb) ' if sys.__stdin__.isatty() else ''
 
     classes = {
@@ -29,6 +31,19 @@ class HBNBCommand(cmd.Cmd):
              'max_guest': int, 'price_by_night': int,
              'latitude': float, 'longitude': float
             }
+
+    def __init__(self, **kwargs):
+        """initializing command line argument"""
+        if 'updated_at' in kwargs:
+            if isinstance(kwargs['updated_at'], str):
+                self.updated_at = datetime.strptime(
+                        kwargs['updated_at'],
+                        '%Y-%m-%d %H:%M:%S'
+                        )
+            else:
+                self.updated_at = kwargs['updated_at']
+        else:
+            self.updated_at = datetime.now()
 
     def preloop(self):
         """Prints if isatty is false"""
@@ -123,7 +138,7 @@ class HBNBCommand(cmd.Cmd):
         if class_name not in HBNBCommand.classes:
             print("** class doesn't exist **")
             return
-        params = {}
+        params = {'updated_at': datetime.now()}
         for arg in args[1:]:
             try:
                 key, value = arg.split('=')
