@@ -17,7 +17,6 @@ class HBNBCommand(cmd.Cmd):
     """ Contains the functionality for the HBNB console"""
 
     # determines prompt for interactive/non-interactive modes
-    completekey = 'Tab'
     prompt = '(hbnb) ' if sys.__stdin__.isatty() else ''
 
     classes = {
