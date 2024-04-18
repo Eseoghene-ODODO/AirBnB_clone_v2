@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """ Place Module for HBNB project """
-from sqlalchemy import Column, String, Integer, Float, ForeignKey
+from sqlalchemy import Column, String, Integer, Float, ForeignKey, Table
 from sqlalchemy.orm import relationship
 from models.base_model import BaseModel
 
@@ -20,16 +20,33 @@ class Place(BaseModel, Base):
     longitude = Column(Float)
     amenity_ids = []
 
+    # Define the association table for the many-to-many relationship
+    place_amenity = Table('place_amenity', Base.metadata,
+                          Column('place_id', String(60),
+                                 ForeignKey('places.id'),
+                                 primary_key=True, nullable=False),
+                          Column('amenity_id', String(60),
+                                 ForeignKey('amenities.id'),
+                                 primary_key=True, nullable=False))
+
     # For DBStorage
     if storage_type == 'db':
-        reviews = relationship("Review", cascade="all, delete", backref="place")
+        amenities = relationship("Amenity", secondary=place_amenity,
+                                 viewonly=False)
     # For FileStorage
     else:
         @property
-        def reviews(self):
+        def amenities(self):
             from models import storage
-            reviews_list = []
-            for review in storage.all(Review).values():
-                if review.place_id == self.id:
-                    reviews_list.append(review)
-            return reviews_list
+            amenities_list = []
+            for amenity_id in self.amenity_ids:
+                amenity = storage.get(Amenity, amenity_id)
+                if amenity:
+                    amenities_list.append(amenity)
+            return amenities_list
+
+        @amenities.setter
+        def amenities(self, obj):
+            if isinstance(obj, Amenity):
+                if obj.id not in self.amenity_ids:
+                    self.amenity_ids.append(obj.id)
